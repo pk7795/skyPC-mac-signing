@@ -1,0 +1,71 @@
+SkyPC SMAppService legacy rollback — 2026-09-24
+
+Reason and scope
+================
+
+The user reported an unresolved login problem after the SMAppService change and
+requested that the SkyPC app source change be stashed while retaining a separate
+legacy release entry point. This rollback does not alter prior signed artifacts,
+the shared signing engine, credentials, or unrelated working-tree files.
+
+Scoped stash
+============
+
+Command:
+
+  git stash push -m 'wip: SMAppService login flow' -- src/tray.rs
+
+Result:
+
+- Stash commit: 3ca90d6ac8ad7cf0396f02f2a622037141c323e4
+- Stashed path: src/tray.rs only
+- Patch size: 120 insertions, 10 deletions
+- src/tray.rs now matches HEAD's legacy implementation.
+- The existing untracked docs/ tree was not stashed or removed.
+
+Legacy release wrapper
+======================
+
+Mac-signing/release_skypc_v2.sh delegates to release_skypc.sh without
+`--launch-agent-plist`. It rejects an input containing the compiled-in
+`com.sub2s.skypc.login-agent.plist` marker and rejects callers that try to pass
+`--launch-agent-plist`. This requires a real rebuild from the legacy source and
+prevents accidental repackaging of an SMAppService binary as a legacy release.
+
+Verification
+============
+
+- `cargo check --locked --package skypc`: passed for legacy source.
+- `.venv/bin/python -m unittest discover -s tests -p 'test_*.py'`:
+  22 passed, 0 failures, 0 errors, 0 skips.
+- `zsh -n release_skypc.sh release_skypc_smappservice.sh release_skypc_v2.sh`:
+  passed.
+- Wrapper prepare-only contract: bundle created without
+  Contents/Library/LaunchAgents and without SMAppService evidence: passed.
+- Wrapper marker rejection before output creation: passed.
+
+Handoff
+=======
+
+No new release binary was built or signed. At final verification,
+Mac-signing/skypc-0.9.38 and skypc-app/target/release/skypc were absent. Build a
+fresh release binary from the current legacy source, copy it to Mac-signing,
+then use `release_skypc_v2.sh`. Build 11 was already notarized and must not be
+reused; the next package build is 12 or later. Runtime, installed login launch,
+Finder visual, Dock and Spotlight checks remain required.
+
+Follow-up (supersedes the binary-availability handoff above)
+=============================================================
+
+The user later supplied `skypc-app/target/release/skypc` from the current legacy
+source. V3 packaged it through `build_mac_artifact.sh --binary`, verified the
+intermediate executable byte-for-byte, and delegated it through the legacy
+release path. Package build 12 passed Developer ID signing, Apple Accepted
+submission 29911596-b1cb-4213-b3fe-207e967ac844, staple, DMG/app Gatekeeper,
+Finder metadata/layout, icon and checksum gates. The final artifact is:
+
+  releases/SkyPC-0.9.38-12-20260924T162545Z.CLmWIv/dist/SkyPC.dmg
+  SHA-256 cd326cb1a66c3567b2ceb9e8f04819005e709e6e425a179728b87e60202f28d8
+
+The final app has no `Contents/Library/LaunchAgents`. Runtime and installed
+legacy login behavior remain unverified because the run used --skip-smoke-test.

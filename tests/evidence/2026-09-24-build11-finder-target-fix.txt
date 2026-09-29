@@ -1,0 +1,85 @@
+SkyPC 0.9.38 build 11 Finder target fix and production evidence — 2026-09-24
+
+Input and source provenance
+===========================
+
+- Input: Mac-signing/skypc-0.9.38
+- Source HEAD: a316c9fd5189c854592c9c30e9fecbac6578c400
+  (Prepare 0.9.38 release)
+- Input and skypc-app/target/release/skypc are byte-identical.
+- Input SHA-256:
+  002bfe32160116d3618c05c23bc739063f392290d939d804fd2d6709badc1d96
+- Architecture: arm64; minimum macOS: 11.0; SDK: 27.0.
+
+Observed failures
+=================
+
+Three build-11 attempts stopped at the Finder layout gate before DMG signing
+and before Apple submission:
+
+- releases/SkyPC-0.9.38-11-20260924T154200Z.D9RWeS
+- releases/SkyPC-0.9.38-11-20260924T154325Z.goSgPk
+- releases/SkyPC-0.9.38-11-20260924T154536Z.26me8n
+
+Finder returned -10006 while setting the position of SkyPC.app. A bounded
+retry did not fix the failure. A read-only diagnostic against a mounted copy
+showed that Finder's front window was the unrelated home window named
+"khoakheu", while the exact mounted folder already exposed Applications and
+SkyPC.app. The previous script captured front window immediately after an
+asynchronous open and therefore addressed the wrong container.
+
+Fix
+===
+
+finder_layout.applescript now obtains targetFolder from the supplied mount
+alias and addresses `container window of targetFolder`. It retains a bounded,
+idempotent retry for item population. It no longer depends on Finder focus or
+the user's other open Finder windows.
+
+Verification
+============
+
+- `osacompile -o /private/tmp/skypc-finder-layout.scpt finder_layout.applescript`
+  passed.
+- `zsh -n release_skypc.sh release_skypc_smappservice.sh` passed.
+- `plutil -lint template/Info.plist template/com.sub2s.skypc.login-agent.plist`
+  passed.
+- `.venv/bin/python -m unittest discover -s tests -p 'test_*.py'` passed:
+  20 tests, 0 failures, 0 errors, 0 skips.
+- A copied build-11 UDRW image was mounted read-write, configured by the fixed
+  AppleScript, and checked with `dmg_layout.py verify`; Finder-confirmed
+  background bookmark, 900x351 layout, logical image size and both icon
+  positions passed. The temporary copy was detached and removed.
+
+Production result
+=================
+
+Command:
+
+  ./release_skypc_smappservice.sh ./skypc-0.9.38 \
+    --version 0.9.38 --build 11 --skip-smoke-test
+
+Run:
+
+  releases/SkyPC-0.9.38-11-20260924T155059Z.uWx7Cx
+
+The pipeline completed Developer ID signing with Hardened Runtime, writable
+and final Finder/background/icon checks, DMG signing, Apple notarization,
+stapling, image verification, and Gatekeeper assessment for both the DMG and
+contained app. Apple status was Accepted under submission
+8de1858c-e0fc-45b1-bc1e-ecff17f00027.
+
+Final DMG:
+
+  releases/SkyPC-0.9.38-11-20260924T155059Z.uWx7Cx/dist/SkyPC.dmg
+
+Size: 16,671,360 bytes
+SHA-256: ca94ca7afb14c0fc04e0433b54dda89e223e82ebaa1eb9947d421fe69506c88d
+
+Open gates
+==========
+
+Runtime was explicitly skipped. Installation into /Applications, hidden login
+relaunch, System Settings Login Item name/icon, real streaming/input/device
+behavior, Finder visual review, Dock icon and installed Spotlight search remain
+unverified. No publication was performed.

@@ -1,0 +1,8 @@
+69bffa256d6f07834f7443058fafaed658f6ef33813dd966a6101ff634c656f7  skypc-app/target/release/skypc
+f2c3e55fa6735b6c38e75c185c070119d80e6cb835d81c0e69947f98f10550e5  skypc-app/src/tray.rs
+5a399014299364ac8d56cee49d90d40a5894f9357d8c09e52188a77a87ce6b77  Mac-signing/release_skypc.sh
+9a1286b0b712797e8c652cdbae9bd3be5636de16e00da67b696ac1637bc00a4c  Mac-signing/release_skypc_smappservice.sh
+2b6b0a9b131e93c926c5b6bb45d4c57ed1da73d2e7d0084ef3e2082d7d7acd7c  Mac-signing/template/com.sub2s.skypc.login-agent.plist
+a88d2cd396a101463f02af2165c572f8748b6571e7c3a0c3dc6a5cdc5d105cf1  Mac-signing/tests/evidence/2026-09-24-smappservice-rust-tests.log
+917b48adc91879bd3f484408fba2d9b33ed389da17ac9b523882cf20ebf5fe4f  Mac-signing/tests/evidence/2026-09-24-smappservice-contract-tests.log
+adf084ec9eb135410f6b721ee34a51eb0f61a86e88b9d89b8a8cfd758598925c  Mac-signing/tests/evidence/2026-09-24-smappservice-prepare.txt

@@ -1,0 +1,127 @@
+SkyPC macOS release v3 build-artifact flow — 2026-09-24
+
+Observed build boundary
+=======================
+
+skypc-app/README.md directs macOS builds through build_mac_artifact.sh. That
+script compiles one target architecture, creates skyPC.app with the historical
+bundle ID com.skypc.client, ad-hoc signs the app, and emits one of:
+
+- skypc-app/dist/skyPC-macOS-AppleSilicon.dmg
+- skypc-app/dist/skyPC-macOS-Intel.dmg
+
+Those images are useful build/test artifacts. Their bundle identity, ad-hoc
+signature, metadata and DMG layout do not satisfy the existing production
+Developer ID contract for com.sub2s.skypc.
+
+V3 design
+=========
+
+Mac-signing/release_skypc_v3.sh accepts one explicit architecture and package
+build. It performs this sequence:
+
+1. Read the version from skypc-app/Cargo.toml.
+2. Run build_mac_artifact.sh with Cargo --locked enabled.
+3. Require both target/<triple>/release/skypc and the expected build DMG.
+4. Mount only that DMG read-only and parse its returned device/mount plist.
+5. Require com.skypc.client and the Cargo version in its source app.
+6. Require its embedded executable to match the target binary byte-for-byte.
+7. Detach only the returned device.
+8. Delegate the target binary to release_skypc_v2.sh, which rejects the paused
+   SMAppService marker and uses the common Developer ID release engine.
+9. Pass the source DMG through release_skypc.sh --source-artifact so its hash is
+   recorded in release-evidence.txt.
+
+The preferred prebuilt mode is
+`release_skypc_v3.sh --binary ../skypc-app/target/release/skypc --build N`.
+`build_mac_artifact.sh --binary` detects the binary architecture and skips
+Cargo. V3 disables ad-hoc signing only for this intermediate provenance image,
+because ad-hoc signing mutates the copied Mach-O and would make byte comparison
+with the supplied unsigned binary impossible. Developer ID signing remains in
+the production release engine.
+
+The script rejects `all`, caller-supplied versions, missing/duplicate build
+numbers and LaunchAgent injection. Separate architecture runs keep output and
+runtime evidence unambiguous. Cleanup reparses the attach plist after an
+interrupted or partially failed attach so it can detach its own device.
+
+Verification
+============
+
+- `.venv/bin/python -m unittest discover -s tests -p 'test_*.py'`:
+  26 passed, 0 failures, 0 errors, 0 skips.
+- `bash -n skypc-app/build_mac_artifact.sh`: passed.
+- `zsh -n` for release_skypc.sh, release_skypc_v2.sh and
+  release_skypc_v3.sh: passed.
+- Targeted mocked arm64 v3 test: passed. It asserts locked build mode, creates
+  the expected target and ad-hoc DMG, mounts through the service double,
+  compares the embedded and target binaries, detaches the returned device,
+  prepares a bundle without the SMAppService agent, invokes no signing/notary
+  service, and records the source-artifact path.
+- Existing-binary and compile-target v3 tests pass, including exact binary,
+  no Cargo invocation for prebuilt mode and exactly one detach.
+- CLI guards for `all`, missing `--build`, and `--version`: passed with expected
+  rejection before invoking the build script.
+
+Release status
+==============
+
+A real arm64 prebuilt flow packaged input SHA-256
+f9944c839686af895ce2e9159fd80ba52ed6d4e4818ee4f54df93ac917ef7c27,
+verified the intermediate DMG executable byte-for-byte, and completed
+prepare-only with exit 0 at
+releases/SkyPC-0.9.38-12-20260924T162334Z.y7RIoL. Developer ID signing,
+notarization and runtime were not run by that preparation.
+
+The subsequent production command was:
+
+  ./release_skypc_v3.sh --binary ../skypc-app/target/release/skypc \
+    --build 12 --skip-smoke-test
+
+It completed at releases/SkyPC-0.9.38-12-20260924T162545Z.CLmWIv. Evidence
+records source-artifact SHA-256
+47d1346b6484fb2aaf4a37e2355aaf9490d88175fa7758cdb5a4b05313f743eb,
+the exact input hash above, no bundled LaunchAgent, Apple Accepted submission
+29911596-b1cb-4213-b3fe-207e967ac844, staple validation, DMG and contained-app
+Gatekeeper acceptance, 900x351 Finder metadata/layout, app and volume icons, and
+checksum verification. Final SkyPC.dmg is 16,670,523 bytes with SHA-256
+cd326cb1a66c3567b2ceb9e8f04819005e709e6e425a179728b87e60202f28d8.
+Runtime and installed legacy login behavior remain unverified because the run
+used --skip-smoke-test.
+
+All-output correction
+=====================
+
+The operator clarified that the canonical build entry point is
+`./build_mac_artifact.sh all`; no separate native `cargo build -r` or v3 rebuild
+should occur. V3 now accepts `--from-build all`, requires the two thin target
+binaries and corresponding ad-hoc DMGs, checks both artifacts before either
+production release starts, and then invokes the shared legacy signing pipeline
+once per architecture. It does not invoke the build script. Because ad-hoc
+signing changes the copied Mach-O bytes, the from-build boundary validates each
+DMG's bundle ID, Cargo version, exact thin architecture, valid ad-hoc bundle
+signature and artifact freshness relative to its target binary; release evidence
+records both target and source-artifact hashes. A controlled two-architecture
+prepare-only test passes and proves the build script is not invoked.
+
+The operator's first real all-output preflight accepted ARM, then correctly
+stopped Intel because it linked `@rpath/libswiftCoreMedia.dylib` without any
+LC_RPATH and declared macOS 10.12 while the app bundle requires 11.0. The build
+script now exports MACOSX_DEPLOYMENT_TARGET=11.0, and the x86_64 Cargo target
+adds only `/usr/lib/swift` as its runtime RPATH. The release dependency gate
+allows `@rpath/libswift*.dylib` only when that is the executable's sole RPATH;
+an unsafe app-local RPATH remains rejected. Rebuilding Intel removed the overlay
+dependency, produced LC_BUILD_VERSION minos 11.0 and retained only the reviewed
+system RPATH.
+
+The corrected real artifacts are:
+
+- arm64 binary: 3d1f9d2b8046a70b817d00c4aabe423f0174b16ff6c4d0ab64e2f8451d88ebc5
+- Apple Silicon DMG: bf2e1bd8ad10ef75628affa809334d69182bdca966e667502d59fadf416d6e80
+- x86_64 binary: 96874046b713d1ef8fb55cccd74c49edf83694ca12c30047b42c79caee20c646
+- Intel DMG: 8e4505ea55edc465e5721c2fc620a3c0214abbcdd3f5d7cb2732850bd753b51a
+
+`--from-build all --build 13 --prepare-only` then passed for both real
+artifacts and created separate arm64/x86_64 production bundles without invoking
+Cargo. Build-13 Developer ID signing, Apple notarization and runtime remain
+unverified until the non-prepare command is run.

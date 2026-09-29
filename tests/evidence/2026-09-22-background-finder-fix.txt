@@ -1,0 +1,65 @@
+SkyPC DMG Finder background fix — 2026-09-22
+
+Observed failure
+================
+
+The user opened the signed/notarized SkyPC 0.9.27 build 5 DMG and supplied a
+screenshot showing the intended icon positions on Finder's plain dark
+background. The mounted artifact contains background.tiff at 1800x702 pixels,
+144 DPI, logical size 900x351 points. Its old icvp alias parses and resolves
+through CoreFoundation, but Finder did not create pBBk/pBB0 background bookmark
+records. The former automatic gate was therefore a false positive.
+
+Root cause and decision
+=======================
+
+A writable copy of the build-5 image reproduced the failure: metadata written
+directly with ds_store/mac_alias passed the helper's structural checks, while
+Finder did not resolve the picture. A fresh positive-control image configured
+by Finder wrote pBBk and displayed the background. The same fresh image using
+only the direct writer did not write a bookmark.
+
+Production now uses finder_layout.applescript to target the exact mounted POSIX
+volume and front Finder window. Finder writes .DS_Store, its background alias
+and bookmark. dmg_layout.py is read-only and rejects the image unless it finds
+a non-empty pBBk/pBB0 record, matching alias volume/path/CNID, 900x351 logical
+image and window size, and the expected icon positions. Failure occurs before
+DMG signing and before Apple notarization.
+
+Verification
+============
+
+- finder_layout.applescript compiles successfully.
+- Four image-density tests pass.
+- Fourteen release contract tests pass; layout writer or verifier failure stops
+  before notarytool.
+- Direct-writer Finder judge: failed as expected; no bookmark appeared.
+- Finder positive control on a fresh writable HFS+ image: passed.
+- Duplicate-name case: the user's build-5 DMG stayed mounted at /Volumes/SkyPC,
+  while the fresh test image mounted at /Volumes/SkyPC 1. Finder wrote the
+  background bookmark for the correct image and both icon positions passed.
+- The duplicate-name image was converted to UDZO, mounted read-only and passed
+  the same Finder bookmark/alias/CNID/image/window/position verifier.
+- Read-only preview SHA-256:
+  519f683fd2b790b530538ed081ca59e68297e593ee26828726ef401c442b69a8
+- Preview:
+  /private/tmp/skypc-finder-judge.LcbABb/background-preview.dmg
+- Executable logs:
+  2026-09-22-background-finder-contract-tests.log,
+  2026-09-22-background-finder-density-tests.log, and
+  2026-09-22-background-finder-judge.log. Source hashes are recorded in
+  2026-09-22-background-finder-source.sha256.
+
+Artifact status
+===============
+
+Build 5 remains unchanged, Apple Accepted under submission
+5e5e3cfb-074a-4a67-b1ed-2c7c04c06187, with SHA-256
+e8d55a0c9d352708aa8045f42ad207055c959cc10af1107dfb35180a424d0916.
+It is not the corrected-background handoff. The preview is unsigned as an outer
+DMG and is not distributable. A fresh signed/notarized 0.9.27 build 6 plus
+manual visual opening of that exact DMG are required. Installed Dock/Spotlight
+remain unverified.
+
+The pre-existing /dev/disk24 volume was not detached or modified. Every test
+device created by the Finder judge was detached.

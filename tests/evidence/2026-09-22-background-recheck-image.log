@@ -1,0 +1,18 @@
+PASS: Finder layout 900x351, matching image logical size, volume-local background and icon positions
+PASS: Finder layout 900x351, matching image logical size, volume-local background and icon positions
+/Volumes/SkyPC 1/SkyPC.app: valid on disk
+/Volumes/SkyPC 1/SkyPC.app: satisfies its Designated Requirement
+background.tiff logical size: (900.0, 351.0)
+pixels: 1800 702 points: (900.0, 351.0)
+/private/tmp/skypc-background-recheck/resolve.swift:4:23: warning: 'CFURLCreateBookmarkDataFromAliasRecord' was deprecated in macOS 11.0: The Carbon Alias Manager is deprecated. This function should only be used to convert Carbon AliasRecords to bookmark data. [#DeprecatedDeclaration]
+2 | import CoreFoundation
+3 | let data = try Data(contentsOf: URL(fileURLWithPath: CommandLine.arguments[1]))
+4 | guard let unmanaged = CFURLCreateBookmarkDataFromAliasRecord(nil, data as CFData) else { fatalError("Invalid native alias record") }
+  |                       `- warning: 'CFURLCreateBookmarkDataFromAliasRecord' was deprecated in macOS 11.0: The Carbon Alias Manager is deprecated. This function should only be used to convert Carbon AliasRecords to bookmark data. [#DeprecatedDeclaration]
+5 | let bookmark = unmanaged.takeRetainedValue() as Data
+6 | var stale = false
+
+[#DeprecatedDeclaration]: <https://docs.swift.org/compiler/documentation/diagnostics/deprecated-declaration>
+resolved: /Volumes/SkyPC 1/.background/background.tiff stale: true exists: true
+1f714be7a5b07f8b4d33e70ddc79c01c1ba5bb80e346084a5fa6ea564104914c  /private/tmp/skypc-background-recheck/image/background-preview.dmg
+PASS: real readonly DMG background scale + alias + layout, icon assets, preserved app signature. Outer image unsigned, not notarized, not for distribution.

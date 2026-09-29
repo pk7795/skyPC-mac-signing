@@ -1,0 +1,83 @@
+SkyPC 0.9.38 build 14 ARM release handoff — 2026-09-25
+
+STATUS: RETAIN FOR SIGNING EVIDENCE ONLY; DO NOT PROMOTE. The input binary
+contains a camera toast/error-handling change later reverted by owner direction,
+and the production Info.plist omits the `skypc://` Google SSO callback URL type.
+
+Artifact
+--------
+- DMG: releases/SkyPC-0.9.38-14-20260924T180132Z.VERe90/dist/SkyPC.dmg
+- Size: 16,666,276 bytes
+- SHA-256: 6df32d5ea18a1c45d1365ba82484569dc7659e0112ee7606befdd1bf7dc6e1ae
+- Architecture: arm64
+- Bundle: com.sub2s.skypc, version 0.9.38, build 14, minimum macOS 11.0
+- Input binary SHA-256:
+  84426240feef3fb3d1c6fcad6529fb95a0fb42d847b20bc033eb5301a1edd3e0
+- Source build DMG SHA-256:
+  885c763217f5466f2d80e27e917a4cb04e708c62622bfc29d678562bdacedd16
+
+Production pipeline
+-------------------
+- Operator ran:
+  ./release_skypc_v3.sh --from-build arm64 --build 14
+- Runtime prompt result: operator-confirmed PASS for the expanded checklist.
+  The evidence does not record which concrete camera, microphone, USB or gamepad
+  hardware was attached, so individual device compatibility is not independently
+  observable from the run log.
+- Apple Notary Service: Accepted.
+- Submission ID: d3b61eac-8792-4d25-a634-9e9c6ee3ec18
+- Staple validation: passed.
+- DMG Gatekeeper: accepted, source=Notarized Developer ID.
+- Contained app Gatekeeper: accepted, source=Notarized Developer ID.
+- Finder background/layout, app icon and volume icon automatic checks: passed.
+- Final checksum and hdiutil image verification: passed.
+
+Independent post-run verification
+---------------------------------
+- The final DMG was mounted read-only and its contained app was checked through
+  the native Keychain/securityd context.
+- codesign --verify --deep --strict: passed.
+- Identifier: com.sub2s.skypc.
+- TeamIdentifier: P4F9DNFZ68.
+- Hardened Runtime flag: present.
+- Secure timestamp: 25 Sep 2026 01:01:33 local time.
+- Contained signed entitlements:
+  - com.apple.security.device.camera=true
+  - com.apple.security.device.audio-input=true
+- Info.plist contains non-empty Camera, Microphone and Local Network usage
+  descriptions.
+- Contained app Gatekeeper reassessment: accepted, Notarized Developer ID.
+- Final DMG staple, Gatekeeper and codesign reassessment: passed.
+- The inspection mount /dev/disk29 was ejected.
+
+Diagnostic notes
+----------------
+- Running `shasum -c` from Mac-signing initially reported a mismatch because the
+  checksum file contains the relative name SkyPC.dmg. Re-running from the
+  artifact's dist directory returned `SkyPC.dmg: OK`; the direct SHA-256 also
+  matches the checksum file.
+- A first contained-app signature check inside the restricted tool sandbox
+  reported Authority unavailable, invalid entitlement blob and an internal Code
+  Signing error. The same read-only app checked outside that sandbox had the full
+  Apple certificate chain, a valid signature and valid entitlement XML. The
+  sandbox result was therefore a securityd/Keychain access false negative, not
+  an artifact defect.
+
+Release status and remaining gates
+----------------------------------
+- This build supersedes build 13 as evidence for the corrected
+  Camera/Microphone signing contract. It is not the final product artifact:
+  its input binary still contains an unapproved camera toast/error-handling
+  change that was subsequently reverted from source, and its production bundle
+  does not register the `skypc://` callback used by Google SSO. Do not promote
+  builds 13 or 14; rebuild ARM and use a new package build number of at least 15.
+- Automatic signing, notarization, staple, Gatekeeper, image, metadata and
+  checksum gates passed for build 14.
+- Runtime is a manual operator PASS tied to the signed app used for this DMG.
+  Camera/microphone capture and device-specific USB/gamepad behavior have no
+  machine-readable trace; preserve test notes when broader hardware coverage is
+  required.
+- The USB privileged-helper/root model remains unresolved. A visible device
+  list alone is not proof of successful bind/seize/redirect.
+- Intel production signing/notarization, clean macOS 10.12 execution, installed
+  Finder/Dock/Spotlight and broader target-Mac compatibility remain open.

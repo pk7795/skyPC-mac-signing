@@ -1,0 +1,51 @@
+SkyPC macOS artifact naming alignment
+Date: 2026-09-29
+
+Requirement
+----------
+Use a post-signing macOS filename structure consistent with Ubuntu-signing.
+Ubuntu publishes skypc_<version>-<revision>_<arch>.deb and an adjacent
+same-basename checksum file. macOS now publishes:
+
+  skypc_<version>-<build>_<arch>.dmg
+  skypc_<version>-<build>_<arch>.dmg.sha256
+
+Architecture mapping
+--------------------
+  arm64    Apple Silicon v3 release
+  x86_64   Intel v3 release
+  universal direct universal Mach-O input to release_skypc.sh
+
+Examples
+--------
+  skypc_0.9.42-16_arm64.dmg
+  skypc_0.9.42-16_arm64.dmg.sha256
+  skypc_0.9.42-16_x86_64.dmg
+  skypc_0.9.42-16_x86_64.dmg.sha256
+
+Implementation
+--------------
+  Mac-signing/release_skypc.sh detects the input architecture with lipo,
+  derives FINAL_DMG_NAME after version/build validation, and renames the
+  candidate only after all automatic release gates pass. The checksum is
+  rewritten to the final basename before the candidate is moved.
+  release_skypc_v3.sh runs one production release per selected architecture;
+  --from-build all therefore produces separate arm64 and x86_64 files in the
+  corresponding run-root subdirectories.
+  SkyPC-candidate.dmg and historical SkyPC.dmg files are intermediate or
+  immutable evidence and are not renamed in place.
+
+Verification
+------------
+  bash -n release_skypc.sh release_skypc_v2.sh release_skypc_v3.sh
+  plutil -lint template/Info.plist template/SkyPC.entitlements
+  python3 tests/test_release_skypc.py
+
+  Result: 28/28 contract tests passed after allowing the prepare-only local
+  lipo architecture probe. The accepted pipeline test checks the final DMG
+  and checksum basenames and verifies the checksum using the new basename.
+  The architecture-specific test exercises x86_64 full publication and the
+  universal naming branch in prepare-only mode.
+  Failure tests confirm no skypc_*.dmg is published when any release gate
+  fails. No Apple service or production signing was run for this naming-only
+  change. Existing releases remain untouched.

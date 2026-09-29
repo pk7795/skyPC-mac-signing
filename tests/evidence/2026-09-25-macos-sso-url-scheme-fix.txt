@@ -1,0 +1,66 @@
+SkyPC macOS Google SSO callback packaging fix — 2026-09-25
+
+Observed behavior
+-----------------
+- Unsigned/ad-hoc build: Google completes authentication and returns to SkyPC.
+- Developer ID build 14: Google reports success in the browser, but SkyPC does
+  not receive the callback.
+
+Source call path
+----------------
+- Message::AuthGoogleLogin requests `/v1/auth/oidc/start?target=desktop` and
+  opens the returned browser URL.
+- The callback contract is `skypc://oidc-complete?code=...`.
+- macOS `application:openURLs:` forwards the URL to Message::AuthOidcCallback.
+- `oidc_callback_code` validates scheme `skypc`, host `oidc-complete`, and one
+  non-empty `code`, then `/v1/auth/oidc/exchange` completes login.
+
+Root cause
+----------
+- skypc-app/build_mac_artifact.sh already writes CFBundleURLTypes containing:
+  - CFBundleTypeRole=Viewer
+  - CFBundleURLName=com.skypc.client.oidc
+  - CFBundleURLSchemes[0]=skypc
+- Mac-signing/template/Info.plist did not contain CFBundleURLTypes. The v3
+  production pipeline rebuilds the app bundle from this independent template,
+  so it discarded the URL registration present in the unsigned build artifact.
+- Signing and notarization succeeded because URL scheme registration is an app
+  metadata/runtime contract, not a notarization acceptance condition.
+
+Fix
+---
+- Added the production URL type with role Viewer, name
+  com.sub2s.skypc.oidc, and scheme skypc.
+- release_skypc.sh validates all three values before creating output and again
+  after constructing the release bundle.
+- release_skypc_v3.sh rejects a source build artifact without the skypc scheme.
+- The manual runtime prompt explicitly requires a Google SSO browser callback.
+- No SSO source, backend, callback parser, UI, toast, or locale behavior changed.
+
+Verification
+------------
+- bash -n release_skypc.sh release_skypc_v2.sh release_skypc_v3.sh: PASS
+- plutil -lint template/Info.plist template/SkyPC.entitlements: PASS
+- python3 tests/test_release_skypc.py: PASS, 27 tests, 0 failures/errors/skips
+- Missing CFBundleURLTypes contract case: PASS (release rejected before output)
+- Accepted pipeline metadata case: PASS (exact production URL type asserted)
+- v3 dual-artifact case: PASS (source build URL scheme required)
+- Real ARM prepare-only command:
+  ./release_skypc_v3.sh --from-build arm64 --build 15 --prepare-only \
+    --output-dir /private/tmp/skypc-sso-prepare-build15-current-20260925
+- Result: PASS; the prepared production bundle contains the exact URL type.
+- Input binary SHA-256:
+  af6427fef04e8189a30095648d2a5a4c5755d727fc073481d33af063ae2bf1b9
+- Source build DMG SHA-256:
+  023414d29a6d95ddd6cc204651325fb119c5391da3bc468016eb64c358f8c474
+- No signing, notarization, Apple upload, app installation, LaunchServices
+  registration, browser login, or backend mutation occurred in prepare-only.
+
+Status and remaining gate
+-------------------------
+- Build 14 is non-promotable because it lacks the production URL registration
+  and also contains the separately reverted camera UI change.
+- Source/build artifact and production metadata are ready for build 15+.
+- Closure requires Developer ID signing/notarization, installation in
+  /Applications, launching that exact app, and one real Google SSO round trip
+  proving the browser callback returns to the installed signed bundle.

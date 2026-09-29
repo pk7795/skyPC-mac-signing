@@ -1,0 +1,76 @@
+SkyPC Hardened Runtime media entitlement incident
+Date: 2026-09-25
+
+Observed behavior
+- The unsigned/ad-hoc app requested Camera and Microphone access. After the
+  operator approved access, the Camera dropdown listed the built-in FaceTime
+  camera and an iPhone continuity camera.
+- The installed Developer ID build 13 did not request Camera access. Its Camera
+  dropdown stayed at Off and the typed permission-denied UI advised enabling
+  SkyPC under System Settings > Privacy & Security > Camera.
+- Microphone enumeration returned devices in the signed app. Enumeration alone
+  is not evidence that microphone capture authorization or capture succeeds.
+
+Build 13 diagnosis
+- App: releases/SkyPC-0.9.38-13-20260924T172232Z.WuWCvG/build/SkyPC.app
+- Identity: com.sub2s.skypc, version 0.9.38, build 13.
+- Designated requirement: Apple Developer ID, team P4F9DNFZ68.
+- Info.plist contains NSCameraUsageDescription and
+  NSMicrophoneUsageDescription.
+- `codesign -d --entitlements :- SkyPC.app` succeeded but wrote zero entitlement
+  bytes. The Hardened Runtime signature therefore carried neither
+  com.apple.security.device.camera nor
+  com.apple.security.device.audio-input.
+- The unsigned/ad-hoc build and production build use different signing
+  identities, and the historical build artifact uses com.skypc.client while
+  production uses com.sub2s.skypc. Their TCC records are not interchangeable.
+- The pinned macOS camera backend requests access only for NotDetermined; a
+  remembered Denied/Restricted state returns PermissionDenied without a new
+  prompt. No TCC database was read, changed, or reset during this diagnosis.
+
+Root cause and correction
+- Build 13 enabled Hardened Runtime without the media resource entitlements.
+  Usage-description strings control prompt text but do not replace the resource
+  entitlements required by this production signature.
+- Added template/SkyPC.entitlements with only camera and audio-input set true.
+- release_skypc.sh now validates both values before preparation, records the
+  entitlement file hash, signs the app with it, extracts the completed
+  signature with `codesign -d --entitlements :-`, lints the resulting plist,
+  and fails before runtime/notarization unless both signed values are true.
+- The manual gate now explicitly rejects an Off-only Camera list and tells the
+  operator to enable the production bundle in System Settings when macOS has
+  retained a prior denial.
+- The first extractor used `--entitlements -`. Real signing showed that current
+  codesign emits a non-plist `[Dict]` representation for that argument. The
+  corrected `:-` spelling emits an XML plist; the contract mock now enforces
+  this exact argument.
+
+Verification
+- `bash -n release_skypc.sh`: PASS.
+- `python3 tests/test_release_skypc.py`: PASS, 24 passed, 0 failed/errors/skips.
+- Missing audio-input entitlement rejection: PASS before output creation.
+- Real arm64 app copied from the current v3 preparation, ad-hoc signed with
+  Hardened Runtime and template/SkyPC.entitlements: PASS.
+- `codesign --verify --deep --strict --verbose=4`: PASS.
+- Extracted signed entitlement plist: PASS; camera=true and audio-input=true.
+- Local verification root:
+  /private/tmp/skypc-entitlement-sign-check-v2.4qVb5D
+- V3 arm64 build-14 prepare-only: PASS with the current build artifact. The
+  release evidence records entitlement SHA-256
+  1bf694e163d736f01027c1ede2456835bb8975124365944bc867a340f3346283 at
+  /private/tmp/skypc-entitlement-prepare-parent.cICtav/build14.
+- The first prepare-only attempt inside the filesystem sandbox failed before
+  bundle preparation because DiskImages returned `Device not configured`.
+  Repeating the same non-signing command with native disk-service access passed;
+  no Apple service was contacted.
+
+Open release gates
+- Build 13 is immutable historical evidence and must not be re-signed or
+  overwritten. It is not promotable for camera use.
+- Produce a new monotonically numbered Developer ID/notarized build with the
+  corrected flow.
+- Quit the old app, install/open the corrected app, then verify Camera and
+  Microphone authorization prompts, device enumeration, and actual capture.
+- macOS may remember Denied for com.sub2s.skypc. Prefer enabling SkyPC in System
+  Settings > Privacy & Security > Camera. A bundle-scoped `tccutil reset Camera
+  com.sub2s.skypc` requires separate operator authorization and was not run.

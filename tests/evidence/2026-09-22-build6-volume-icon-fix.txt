@@ -1,0 +1,65 @@
+SkyPC 0.9.27 build 6 volume-icon failure and fix
+Date: 2026-09-22
+
+Production failure
+- Run: releases/SkyPC-0.9.27-6-20260922T163303Z.s0pOx8
+- Input SHA-256: 5371b86187492b883431f61c4a7f47c8dde8b37e3784e2cc184af6144df35de9
+- Runtime: operator-confirmed PASS
+- Apple notarization: Accepted, submission 5306c28a-022b-4656-b39b-61a641a8f5f2
+- Stapler validation and DMG Gatekeeper assessment passed.
+- The pipeline then stopped before publication with `ERROR: DMG volume icon mismatch`.
+- The retained signed/stapled candidate SHA-256 is
+  28f6e759df7fb0490657f5c84b26fb765234b4d8a2d577ba647fbc2f2b71f7cc.
+
+Diagnosis
+- Read-only inspection of both `build/SkyPC-rw.dmg` and
+  `build/SkyPC-candidate.dmg` found no `.VolumeIcon.icns` and returned custom
+  volume icon flag `C0`.
+- The contained app icon remains byte-identical to the source ICNS.
+- The final candidate still passes the Finder background bookmark, relative
+  alias/CNID, 900x351 logical size, window and icon-position verifier.
+- The script had applied and checked the volume icon before asking Finder to
+  persist the background/layout. Finder's update removed the file/flag, and the
+  script did not check them again until after signing, notarization and staple.
+- Exact read-only evidence:
+  - tests/evidence/2026-09-22-build6-candidate-icon-diagnosis.txt
+  - tests/evidence/2026-09-22-build6-rw-icon-diagnosis.txt
+  - tests/evidence/2026-09-22-build6-icon-diagnosis.sh
+
+Fix
+- `release_skypc.sh` now lets Finder write and verifies `.DS_Store` first, then
+  copies `.VolumeIcon.icns`, applies hidden/custom-icon flags, and calls the full
+  volume check immediately before sync/detach.
+- The service contract double now simulates Finder deleting an earlier volume
+  icon. The accepted-flow test requires `osascript` to precede `SetFile`.
+- The signed build-6 candidate was not modified. Adding the missing icon would
+  change its contents and invalidate its existing signature/ticket.
+
+Verification
+- `bash -n release_skypc.sh` and both diagnostic/smoke scripts: PASS.
+- `python3 tests/test_release_skypc.py`: 14 passed, 0 failed/errors/skipped.
+- `.venv/bin/python -m unittest -v tests/test_dmg_layout.py`: 4 passed, 0
+  failed/errors/skipped.
+- Real local UDRW -> Finder layout -> post-Finder icon -> UDZO -> read-only
+  remount smoke: PASS. Both Finder background verification and exact volume icon
+  plus hidden/custom flags survive conversion. Log:
+  tests/evidence/2026-09-22-post-finder-volume-icon-smoke.log
+- Unsigned local preview SHA-256:
+  79ad7c47f90fe25579611b54c492c9247ab0ce741dc71ee2820b7a729c206a04.
+- Test-created mounts were detached. No new Apple submission was made.
+
+Open gates
+- Build 6 is retained failure evidence and must not be distributed.
+- A fresh signed/notarized build 7 run using the fixed ordering is required.
+- The first attempt to start build 7 was rejected before process execution by
+  automatic approval review. No run directory was created and no data was sent;
+  explicit authorization for `skypc-0.9.27` build 7 to Apple is pending.
+- Visual opening of that exact DMG and installed Finder/Dock/Spotlight checks
+  remain manual release gates.
+
+Superseded status, 2026-09-23
+- Explicit authorization was received. Build 7 completed all automatic release
+  gates and the exact DMG passed Finder visual inspection; see
+  tests/evidence/2026-09-23-build7-release-handoff.txt. The build-7 production
+  and DMG-visual gates above are closed. Installed runtime and post-install
+  Spotlight remain open.

@@ -1,0 +1,128 @@
+SkyPC macOS capability and permission audit — 2026-09-25
+
+Scope
+-----
+- Current unsandboxed Developer ID/Hardened Runtime release flow.
+- Source and binary audit for camera, microphone, Local Network, Accessibility
+  keyboard/mouse capture, USB passthrough, gamepad, clipboard, and screen capture.
+- No TCC reset, System Settings mutation, signing, notarization, Apple upload,
+  app installation, or device claim was performed by this audit.
+
+Source and binary evidence
+--------------------------
+- skypc-app/src/hardware.rs:
+  - enumerate_cameras() uses the existing
+    skypc_capture::enumerate_redirected_camera_device_list() wrapper.
+  - enumerate_microphones() uses the core redirected-microphone enumerator.
+  - enumerate_usb_devices() uses skypc_usb::list_usb_devices().
+- skypc-app/src/app.rs checks ensure_accessibility_access() before Connect and
+  forwards camera, microphone, USB bus ID and Xbox 360 gamepad mode.
+- skypc-app/src/remote/client.rs maps those selections into
+  UiClientStartupOptions; USB is sent as usb_bus_id.
+- skypc-core b929548:
+  - keyboard_grab/macos.rs calls AXIsProcessTrusted and creates an active
+    HID-level CGEventTap.
+  - redirected_microphone.rs builds and starts a cpal input stream.
+  - macos_gamepad_bridge.m uses GameController and IOHID, including output
+    reports for supported controllers.
+  - clipboard.rs uses NSPasteboard text types.
+- rusbip 5539222 / its nusb fork uses IOKit. The macOS path can call
+  USBDeviceOpenSeize and USBInterfaceOpenSeize, then cycle configuration to
+  detach a kernel-owned interface. Its README states physical forwarding on
+  macOS requires sudo. SkyPC currently has no privileged helper/elevation path,
+  so inventory may work while actual bind/redirect can fail. This is an open
+  product gate, not something fixed by an App Sandbox USB entitlement.
+- The audited arm64 binary links IOKit, AVFoundation, CoreMedia, CoreAudio,
+  VideoToolbox, IOSurface, AppKit, ApplicationServices, GameController,
+  AudioUnit, Security and CoreGraphics. Relevant imports include AVCapture,
+  AXIsProcessTrusted, AudioObject, CGEventTapCreate, GCController, IOService and
+  NSPasteboard symbols. No ScreenCaptureKit or CoreBluetooth import/call path
+  was found. CGDisplay mode enumeration is not local screen capture.
+
+Capability decision
+-------------------
+- Keep the signed entitlement set minimal:
+  com.apple.security.device.camera=true
+  com.apple.security.device.audio-input=true
+- Require non-empty NSCameraUsageDescription, NSMicrophoneUsageDescription and
+  NSLocalNetworkUsageDescription before creating a release output directory.
+- Reject app-sandbox, sandbox network client/server, sandbox USB/Bluetooth, the
+  incorrect device.microphone key, allow-jit, allow-unsigned-executable-memory
+  and disable-library-validation in this Developer ID flow.
+- Camera and microphone require actual capture tests; device enumeration alone
+  is insufficient.
+- Local Network requires prompt/state plus direct LAN streaming on macOS 15+.
+- Accessibility requires the user-granted System Settings permission plus an
+  actual keyboard/mouse grab test.
+- USB requires list, bind/seize, data redirect, hotplug and reconnect with real
+  hardware. Include a device normally owned by a kernel driver. Treat the
+  dependency's sudo requirement as an unresolved release risk.
+- Gamepad requires wired and Bluetooth input plus output/rumble where supported.
+- Clipboard requires a two-way text test in a real session.
+- Screen Recording permission is not required by the current remote-video
+  receive/decode path. Re-audit if local screen capture is introduced.
+
+Apple documentation used
+------------------------
+- Hardened Runtime resource access:
+  https://developer.apple.com/documentation/security/hardened-runtime
+- App Sandbox entitlement behavior:
+  https://developer.apple.com/library/archive/documentation/Miscellaneous/Reference/EntitlementKeyReference/Chapters/EnablingAppSandbox.html
+- USB App Sandbox entitlement:
+  https://developer.apple.com/library/archive/documentation/DeviceDrivers/Conceptual/USBBook/USBIntro/USBIntro.html
+- Local Network privacy on macOS 15:
+  https://developer.apple.com/documentation/technotes/tn3179-understanding-local-network-privacy
+- NSLocalNetworkUsageDescription:
+  https://developer.apple.com/documentation/BundleResources/Information-Property-List/NSLocalNetworkUsageDescription
+- Accessibility trust API:
+  https://developer.apple.com/documentation/applicationservices/1459186-axisprocesstrustedwithoptions
+- CGEventTap:
+  https://developer.apple.com/documentation/coregraphics/cgevent/tapcreate(tap:place:options:eventsofinterest:callback:userinfo:)
+- GameController:
+  https://developer.apple.com/documentation/gamecontroller
+
+Implemented changes
+-------------------
+- Mac-signing/template/Info.plist and skypc-app/build_mac_artifact.sh now include
+  NSLocalNetworkUsageDescription.
+- Mac-signing/release_skypc.sh validates all three privacy descriptions,
+  rejects the unsupported/broad entitlement keys above, and names the concrete
+  real-device checks in its interactive runtime gate.
+- The release guide, canonical signing plan, ledger and README record the same
+  capability model and open gates.
+- A diagnostic typed camera-error/toast implementation was later removed at the
+  user's direction because product permission UI belongs to another owner. This
+  audit does not authorize or require UI changes.
+
+Verification
+------------
+- bash -n release_skypc.sh release_skypc_v2.sh release_skypc_v3.sh: PASS
+- plutil -lint template/Info.plist template/SkyPC.entitlements: PASS (2/2)
+- python3 tests/test_release_skypc.py: PASS (26 tests, 0 failures, 0 errors,
+  0 skipped)
+- Real v3 arm64 prepare-only command:
+  ./release_skypc_v3.sh --from-build arm64 --build 14 --prepare-only \
+    --output-dir /private/tmp/skypc-capability-audit-build14-20260925
+  Result: PASS; unsigned bundle only, no DMG/signing/notarization/Apple upload.
+- Prepared bundle privacy keys: Camera, Microphone and Local Network all present
+  with non-empty descriptions.
+- Prepared input SHA-256:
+  84426240feef3fb3d1c6fcad6529fb95a0fb42d847b20bc033eb5301a1edd3e0
+- Source build DMG SHA-256:
+  885c763217f5466f2d80e27e917a4cb04e708c62622bfc29d678562bdacedd16
+
+Follow-up release gates
+-----------------------
+- Build 14 subsequently passed Developer ID signing, Apple notarization, staple,
+  Gatekeeper and independent final-DMG entitlement verification. See
+  2026-09-25-build14-arm-release-handoff.txt.
+- The operator confirmed PASS for camera/microphone and the expanded runtime
+  prompt on build 14, but the run log has no independent capture/device trace.
+- Local Network prompt/state and direct LAN streaming on macOS 15+.
+- Accessibility approval and actual keyboard/mouse grab.
+- Wired/Bluetooth gamepad input and supported output/rumble.
+- USB list plus real bind/seize/redirect/hotplug/reconnect; resolve the current
+  root/helper model before claiming production USB support.
+- Clipboard two-way runtime check and normal internet/P2P streaming.
+- Intel production signing/notarization and clean macOS 10.12 runtime.
+- Installed Finder, Dock and Spotlight checks.

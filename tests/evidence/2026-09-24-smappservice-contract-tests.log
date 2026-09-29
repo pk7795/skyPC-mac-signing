@@ -1,0 +1,21 @@
+test_accepted_pipeline_and_metadata (__main__.ReleaseTests.test_accepted_pipeline_and_metadata) ... ok
+test_background_density_write_must_be_verified (__main__.ReleaseTests.test_background_density_write_must_be_verified) ... ok
+test_clean_template_without_old_app_and_download_metadata (__main__.ReleaseTests.test_clean_template_without_old_app_and_download_metadata) ... ok
+test_dirty_or_unreadable_xattrs_stop_before_signing (__main__.ReleaseTests.test_dirty_or_unreadable_xattrs_stop_before_signing) ... ok
+test_env_literals_are_not_executed_or_logged (__main__.ReleaseTests.test_env_literals_are_not_executed_or_logged) ... ok
+test_existing_output_is_preserved (__main__.ReleaseTests.test_existing_output_is_preserved) ... ok
+test_failures_never_publish (__main__.ReleaseTests.test_failures_never_publish) ... ok
+test_insecure_env_is_rejected (__main__.ReleaseTests.test_insecure_env_is_rejected) ... ok
+test_missing_background_is_rejected (__main__.ReleaseTests.test_missing_background_is_rejected) ... ok
+test_missing_icon_is_rejected (__main__.ReleaseTests.test_missing_icon_is_rejected) ... ok
+test_non_system_dependency_is_rejected (__main__.ReleaseTests.test_non_system_dependency_is_rejected) ... ok
+test_prepare_only_has_no_external_services (__main__.ReleaseTests.test_prepare_only_has_no_external_services) ... ok
+test_smappservice_launch_agent_is_embedded_and_recorded (__main__.ReleaseTests.test_smappservice_launch_agent_is_embedded_and_recorded) ... ok
+test_smappservice_wrapper_rejects_legacy_binary (__main__.ReleaseTests.test_smappservice_wrapper_rejects_legacy_binary) ... ok
+test_staging_corruption_stops_before_image_creation (__main__.ReleaseTests.test_staging_corruption_stops_before_image_creation) ... ok
+test_unknown_env_key_is_rejected (__main__.ReleaseTests.test_unknown_env_key_is_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 16 tests in 33.528s
+
+OK

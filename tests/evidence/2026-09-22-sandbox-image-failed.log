@@ -1,0 +1,6 @@
+Command (sandbox):
+hdiutil create -volname SkyPC -fs HFS+ -srcfolder /private/tmp/skypc-signing-preparation-20260922/dmg-root -format UDRW /private/tmp/skypc-signing-image-check-20260922/test-rw.dmg
+Exit: 1
+hdiutil: WARNING: 'hdiutil create -volname -format ...' is deprecated. Please use 'diskutil image create from/blank --volumeName --format ...' instead.
+hdiutil: create failed - Device not configured
+The identical command succeeded with approved access to the macOS disk-image service outside the sandbox.

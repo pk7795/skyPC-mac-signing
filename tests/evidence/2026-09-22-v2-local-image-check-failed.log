@@ -1,0 +1,4 @@
+/private/tmp/skypc-v2-image-check/dmg-root/SkyPC.app: valid on disk
+/private/tmp/skypc-v2-image-check/dmg-root/SkyPC.app: satisfies its Designated Requirement
+Mac-signing/tests/evidence/2026-09-22-v2-local-image-check.sh: line 26: run: command not found
+Mac-signing/tests/evidence/2026-09-22-v2-local-image-check.sh: line 26: cleanup: command not found

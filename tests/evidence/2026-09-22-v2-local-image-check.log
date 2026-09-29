@@ -1,0 +1,8 @@
+/private/tmp/skypc-v2-image-check-pass/dmg-root/SkyPC.app: valid on disk
+/private/tmp/skypc-v2-image-check-pass/dmg-root/SkyPC.app: satisfies its Designated Requirement
+Writable mount discovered: /Volumes/SkyPC (/dev/disk24s1)
+Readonly mount discovered: /Volumes/SkyPC (/dev/disk24s1)
+/Volumes/SkyPC/SkyPC.app: valid on disk
+/Volumes/SkyPC/SkyPC.app: satisfies its Designated Requirement
+2c53c229a899fd8907899e60f11d68d428e8a048b596658373414f3999d81793  /private/tmp/skypc-v2-image-check-pass/test-readonly.dmg
+PASS: v2 production mount helpers, signed staging, real UDRW/UDZO, both icons/flags, app signature, executable, plist, Applications shortcut; mounts detached.

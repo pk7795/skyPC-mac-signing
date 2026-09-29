@@ -1,0 +1,8 @@
+/Users/khoakheu/SkyPC-workspace/Mac-signing/template/Info.plist: OK
+
+[prepare bundle and full-resolution icon]
+
+[clean and verify extended attributes before signing]
+
+Prepared unsigned bundle: /private/tmp/skypc-v2-preparation-pass/build/SkyPC.app
+No release DMG was produced.

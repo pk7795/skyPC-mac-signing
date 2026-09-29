@@ -1,0 +1,6 @@
+b2a50a16369cb6154e335e6224dbff05ab26821bc3f37d9e9af95a3e1c0d2a5d  Mac-signing/release_skypc.sh
+1a4a3f39924e9d0e774cf2e75a062a253db5b5d7d869acbdc22bae642eedec04  Mac-signing/tests/test_release_skypc.py
+d836da42405ac45983fe180b35e474039610dce4fbe6d7bca4777fc698b57d22  Mac-signing/skypc
+132a67b72f6bebe647ba6b326452d7f0f484e207100aacd9fe3da4be910fb2a6  Mac-signing/SkyPC.icns
+aaa9efeaca78f683dfb033496e501173c60c89727b326838f658b106796326c0  Mac-signing/SkyPC.app/Contents/Info.plist
+d40fdcac7176a0b1cae9532425e0ae87d8a392706a1e51df6cc4462ba14c005d  Mac-signing/tests/evidence/2026-09-22-local-image-check.sh

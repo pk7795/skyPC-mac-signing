@@ -1,0 +1,23 @@
+utc=2026-09-24T14:21:46Z
+version=0.9.37
+build=10
+input 69bffa256d6f07834f7443058fafaed658f6ef33813dd966a6101ff634c656f7  /Users/khoakheu/SkyPC-workspace/skypc-app/target/release/skypc
+icon ec1630168674a6d3f3b7d1a4f5fc91196083e47a3ac29707876a65e78e4a73e0  /Users/khoakheu/SkyPC-workspace/skypc-app/assets/AppIcon.icns
+background c83eace3f64eb6d9b6518b2c7651a74b30ec4cb5c088e53f70aabf2b9c0c3e67  /Users/khoakheu/SkyPC-workspace/skypc-app/assets/background.jpg
+layout script 26e09943a57dd5b2085832cb46563d396732e2308852f9c5830e612a4b86b721  /Users/khoakheu/SkyPC-workspace/Mac-signing/dmg_layout.py
+Finder script 7f06f86693a0a54755fd7f3bef8423a8a2ca096a3952803db41eacb2c99086b3  /Users/khoakheu/SkyPC-workspace/Mac-signing/finder_layout.applescript
+plist 8d4a7521a2a3611bdf7247ecf212ad2ec6602010d3d72220ec6cbdda527a87e9  /Users/khoakheu/SkyPC-workspace/Mac-signing/template/Info.plist
+script 5a399014299364ac8d56cee49d90d40a5894f9357d8c09e52188a77a87ce6b77  /Users/khoakheu/SkyPC-workspace/Mac-signing/release_skypc.sh
+launch agent 2b6b0a9b131e93c926c5b6bb45d4c57ed1da73d2e7d0084ef3e2082d7d7acd7c  /Users/khoakheu/SkyPC-workspace/Mac-signing/template/com.sub2s.skypc.login-agent.plist
+/Users/khoakheu/SkyPC-workspace/skypc-app/target/release/skypc: Mach-O 64-bit executable arm64
+ProductName:		macOS
+ProductVersion:		27.0
+BuildVersion:		26A428
+installed Finder/Dock/Spotlight=unverified
+stage=prepare bundle and full-resolution icon
+dmg canvas=900x351 points
+login item=SMAppService bundled LaunchAgent
+stage=clean and verify extended attributes before signing
+pre-sign extended attributes=system provenance only (retained by macOS)
+preparation=passed
+signing/notarization/runtime=unverified

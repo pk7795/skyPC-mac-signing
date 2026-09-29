@@ -1,0 +1,60 @@
+SkyPC 0.9.38 build 13 Apple Silicon production release
+Date: 2026-09-25 local / 2026-09-24 UTC
+
+Retained interrupted attempt
+- Command: release_skypc_v3.sh --from-build all --build 13
+- Run: releases/SkyPC-0.9.38-13-20260924T165547Z.2Am3Ty
+- Result: operator interrupted with Ctrl-C at the ARM manual runtime gate.
+- Exit: 130. The app had been signed, but no DMG was created and nothing was
+  submitted to Apple. The retained release-evidence.txt records the failure.
+- That attempt used the older ARM input and source-artifact hashes and is not
+  provenance for the successful release below.
+
+Successful ARM-only release
+- Command: release_skypc_v3.sh --from-build arm64 --build 13
+- Run: releases/SkyPC-0.9.38-13-20260924T172232Z.WuWCvG
+- Version/build: 0.9.38 / 13
+- Architecture/minimum: arm64 / macOS 11.0
+- Input binary SHA-256:
+  84426240feef3fb3d1c6fcad6529fb95a0fb42d847b20bc033eb5301a1edd3e0
+- Source build DMG SHA-256:
+  885c763217f5466f2d80e27e917a4cb04e708c62622bfc29d678562bdacedd16
+- Runtime gate: operator entered PASS after the script's launch, streaming,
+  keyboard/mouse, gamepad, USB, camera and microphone checklist.
+- Developer ID team: P4F9DNFZ68; Hardened Runtime flag present.
+- Apple result: Accepted.
+- Submission ID: 6d336dad-da2b-432e-b031-b25a8c2ce489
+- Staple validation: PASS.
+- DMG and contained-app Gatekeeper: accepted, Notarized Developer ID.
+- Final image verifier: PASS.
+- Final DMG size: 16,665,970 bytes.
+- Final DMG SHA-256:
+  30e3e5cb0214194c44b20ba9951538363ec4d44f2004a9aa8b7c131614d8fba6
+- Independent post-run codesign, stapler, Gatekeeper and hdiutil verify: PASS.
+
+Artifact
+- releases/SkyPC-0.9.38-13-20260924T172232Z.WuWCvG/dist/SkyPC.dmg
+- releases/SkyPC-0.9.38-13-20260924T172232Z.WuWCvG/dist/SkyPC.dmg.sha256
+- releases/SkyPC-0.9.38-13-20260924T172232Z.WuWCvG/release-evidence.txt
+
+Open gates
+- Installed Finder, Dock and Spotlight checks remain manual.
+- The script records operator-confirmed runtime PASS. The evidence does not
+  independently identify which physical camera/USB/gamepad devices were
+  present, so device-specific compatibility remains tied to the operator test.
+- Intel production signing/notarization was not run. The interrupted `all`
+  attempt stopped before the Intel release began.
+
+Post-release correction, 2026-09-25
+- The user later compared the unsigned/ad-hoc and signed apps with real camera
+  hardware. The unsigned app prompted for Camera/Microphone and listed the
+  FaceTime and iPhone cameras after approval. Build 13 did not prompt for
+  Camera and returned the permission-denied UI state.
+- Build 13 contains both usage descriptions, but `codesign -d --entitlements
+  :-` returned zero entitlement bytes. Its manual PASS therefore does not close
+  Camera/Microphone authorization or capture.
+- Build 13 remains notarization and packaging evidence, but it must not be
+  promoted for camera use. The release flow now requires camera and audio-input
+  entitlements; a new monotonically numbered signed/notarized build and real
+  device test are required. See
+  `2026-09-25-hardened-runtime-media-entitlements.txt`.

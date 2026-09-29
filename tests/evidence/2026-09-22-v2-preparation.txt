@@ -1,0 +1,17 @@
+utc=2026-09-22T14:44:53Z
+version=0.1.1
+build=2
+input d836da42405ac45983fe180b35e474039610dce4fbe6d7bca4777fc698b57d22  /Users/khoakheu/SkyPC-workspace/Mac-signing/skypc
+icon 132a67b72f6bebe647ba6b326452d7f0f484e207100aacd9fe3da4be910fb2a6  /Users/khoakheu/SkyPC-workspace/Mac-signing/SkyPC.icns
+plist 8d4a7521a2a3611bdf7247ecf212ad2ec6602010d3d72220ec6cbdda527a87e9  /Users/khoakheu/SkyPC-workspace/Mac-signing/template/Info.plist
+script 044d57a711c9885843525a292fe8819030e09436069cfdc255b65e85557439c9  /Users/khoakheu/SkyPC-workspace/Mac-signing/release_skypc.sh
+/Users/khoakheu/SkyPC-workspace/Mac-signing/skypc: Mach-O 64-bit executable arm64
+ProductName:		macOS
+ProductVersion:		27.0
+BuildVersion:		26A428
+installed Finder/Dock/Spotlight=unverified
+stage=prepare bundle and full-resolution icon
+stage=clean and verify extended attributes before signing
+pre-sign extended attributes=system provenance only (retained by macOS)
+preparation=passed
+signing/notarization/runtime=unverified

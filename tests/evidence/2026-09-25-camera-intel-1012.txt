@@ -1,0 +1,71 @@
+SkyPC camera enumeration and Intel macOS 10.12 follow-up
+Date: 2026-09-25
+
+Scope
+- Preserve Apple Silicon minimum macOS 11.0.
+- Set Intel minimum macOS 10.12 and make the app self-contained for Swift
+  back-deployment overlays.
+- Distinguish camera permission/backend failures from a real empty device list.
+
+Source diagnosis
+- The prior hardware::enumerate_cameras converted every camera backend error
+  into Vec::default(), so the UI could only show Off.
+- The pinned cameras package exposes Error::PermissionDenied separately.
+- The production Info.plist already has NSCameraUsageDescription.
+- system_profiler SPCameraDataType -json returned no camera on the current Mac.
+  Microphone discovery uses a separate backend and is not evidence of camera
+  availability.
+- No TCC database was changed or reset.
+
+Implemented contracts
+- build_mac_artifact.sh passes deployment target 11.0 for arm64 and 10.12 for
+  x86_64, and writes the same value to each app Info.plist.
+- The Intel executable prefers @executable_path/../Frameworks. When it links a
+  Swift overlay, swift-stdlib-tool copies the needed dylibs into the app before
+  ad-hoc signing.
+- release_skypc.sh --minimum-os writes the production plist, permits only the
+  reviewed app-local and Apple system Swift RPATHs, requires app-local Swift
+  below macOS 11, records dylib hashes and signs nested dylibs before the app.
+- release_skypc_v3.sh validates and forwards 11.0 for arm64 and 10.12 for Intel.
+- Camera enumeration is asynchronous and reports localized no-device,
+  permission-denied and backend-error messages.
+
+Verification
+- cargo check --offline --package skypc: PASS.
+- bash -n build_mac_artifact.sh: PASS.
+- bash -n release_skypc.sh release_skypc_v2.sh release_skypc_v3.sh: PASS.
+- Python release contract suite: PASS, 23 passed, 0 failed/errors/skips; the
+  added v3 per-architecture minimum assertion also passed in a focused rerun.
+- Real Intel build: PASS after rerunning outside the filesystem sandbox so
+  DiskImages could create the DMG. The initial sandboxed attempt compiled,
+  copied Swift and ad-hoc signed the app, then hdiutil returned
+  "Device not configured" without producing a new DMG.
+- Real Intel binary: LC_VERSION_MIN_MACOSX 10.12; RPATHs are
+  @executable_path/../Frameworks and /usr/lib/swift; direct Swift dependency is
+  @rpath/libswiftCoreMedia.dylib.
+- Real ad-hoc app: LSMinimumSystemVersion 10.12, 17 x86_64 Swift dylibs,
+  codesign --verify --deep --strict PASS.
+- Real Intel DMG SHA-256:
+  d443e10d41b6badf5f5a4ec5b9a1755cdf5814697d6be67c354c00a41ff82ede
+- Real Intel binary SHA-256:
+  f4caa5056e31ccc7d8da6820837a116acd0d622ea0e604c89b3881906c272e97
+- V3 Intel prepare-only: PASS. It mounted and validated the ad-hoc DMG, then
+  produced a production-layout unsigned app with minimum 10.12 and 17 Swift
+  dylibs at /private/tmp/skypc-v3-intel-1012-20260925.
+- Real Apple Silicon build: PASS with LC_BUILD_VERSION minimum 11.0, no bundled
+  Swift dylibs, binary SHA-256
+  84426240feef3fb3d1c6fcad6529fb95a0fb42d847b20bc033eb5301a1edd3e0 and
+  build-DMG SHA-256
+  885c763217f5466f2d80e27e917a4cb04e708c62622bfc29d678562bdacedd16.
+- Final v3 all prepare-only: PASS for both current DMGs. The production-layout
+  bundles report arm64 minimum 11.0 and x86_64 minimum 10.12 at
+  /private/tmp/skypc-v3-all-camera-1012-20260925.
+
+Open gates
+- Launch and exercise the Intel artifact on a clean macOS 10.12 machine.
+- Confirm the signed/notarized Intel app carries and validates every required
+  Swift dylib.
+- Exercise the Camera dropdown with a real built-in/USB camera and with camera
+  permission denied/allowed. Current-machine hardware proof is unavailable.
+- Production Developer ID signing, Apple notarization and runtime smoke are not
+  part of this source correction.

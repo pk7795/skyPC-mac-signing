@@ -1,0 +1,36 @@
+image=releases/SkyPC-0.9.27-6-20260922T163303Z.s0pOx8/build/SkyPC-rw.dmg
+mount=/Volumes/SkyPC
+device=/dev/disk24
+/Volumes/SkyPC
+/Volumes/SkyPC/.background
+/Volumes/SkyPC/.DS_Store
+/Volumes/SkyPC/Applications
+/Volumes/SkyPC/SkyPC.app
+ec1630168674a6d3f3b7d1a4f5fc91196083e47a3ac29707876a65e78e4a73e0  /Users/khoakheu/SkyPC-workspace/skypc-app/assets/AppIcon.icns
+ec1630168674a6d3f3b7d1a4f5fc91196083e47a3ac29707876a65e78e4a73e0  /private/tmp/skypc-build6-icon-diagnosis/AppIcon.icns
+  164213 /Users/khoakheu/SkyPC-workspace/skypc-app/assets/AppIcon.icns
+  164213 /private/tmp/skypc-build6-icon-diagnosis/AppIcon.icns
+  328426 total
+/Users/khoakheu/SkyPC-workspace/skypc-app/assets/AppIcon.icns: Mac OS X icon, 164213 bytes, "ic12" type
+/private/tmp/skypc-build6-icon-diagnosis/AppIcon.icns:         Mac OS X icon, 164213 bytes, "ic12" type
+volume_icon=missing
+app_cmp=PASS
+volume_custom_icon_flag=C0
+volume_root_xattrs:
+com.apple.provenance: 
+source_icon_xattrs:
+source_files=icon_128x128.png,icon_128x128@2x.png,icon_16x16.png,icon_16x16@2x.png,icon_256x256.png,icon_256x256@2x.png,icon_32x32.png,icon_32x32@2x.png,icon_512x512.png,icon_512x512@2x.png
+volume_files=
+app_files=icon_128x128.png,icon_128x128@2x.png,icon_16x16.png,icon_16x16@2x.png,icon_256x256.png,icon_256x256@2x.png,icon_32x32.png,icon_32x32@2x.png,icon_512x512.png,icon_512x512@2x.png
+source_volume_iconset_equal=False
+source_app_iconset_equal=True
+volume_difference=icon_128x128.png:700b113bdca0e8a6baf321b2727f9bb82bdaf3f93d4fef64817c987066f174e0:None
+volume_difference=icon_128x128@2x.png:139e0f422ffd236e8cedc6c3eaef35688e132d9971e64ac8475776ab49b8cc1e:None
+volume_difference=icon_16x16.png:183e58e15028153169445b6904cf6a40b9286713e13ff9dc646f2ad6cfe0caa1:None
+volume_difference=icon_16x16@2x.png:ba5c6a25ca49eee52064a713eafe408e5830da75495663648b540f59967713c9:None
+volume_difference=icon_256x256.png:139e0f422ffd236e8cedc6c3eaef35688e132d9971e64ac8475776ab49b8cc1e:None
+volume_difference=icon_256x256@2x.png:c79e77b3b222f6de50cd09e4dd855acfcb46a4d4581b7d0f04af701e8ebd188b:None
+volume_difference=icon_32x32.png:dd0db15b53c4feacdb84e283e816f029304872fbe2778314a9b70d7048c48144:None
+volume_difference=icon_32x32@2x.png:d15c9814df2a2843c2869238a2766e65468f4cdbc1f6f0a23f4a98457d7d0bae:None
+volume_difference=icon_512x512.png:c79e77b3b222f6de50cd09e4dd855acfcb46a4d4581b7d0f04af701e8ebd188b:None
+volume_difference=icon_512x512@2x.png:5cb5aea9bdf7f5627635946df9d50bd111f01c039974420a7801d03ddd3115b8:None

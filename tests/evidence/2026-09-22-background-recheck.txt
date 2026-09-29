@@ -1,0 +1,80 @@
+SkyPC DMG background recheck — 2026-09-22
+
+Result
+======
+
+CONFIRMED DEFECT in the already signed/notarized 0.9.26 build 3 and 0.9.27
+build 4 images: their packaged background.jpg is 1800x702 pixels at 72 DPI.
+Native AppKit therefore reads a logical size of 1800x702 points while the Finder
+window is 900x351 points. The existing alias resolves to the packaged image, so
+the issue is image density/scale rather than a missing alias target.
+
+Fix
+===
+
+release_skypc.sh now converts the source artwork to lossless
+.background/background.tiff, writes 144 DPI, and reads pixel/DPI values back
+before continuing. dmg_layout.py performs the same logical-size check when
+configuring the writable image and verifying the final read-only image. A
+successful sips exit alone is no longer accepted as proof that the density was
+stored.
+
+Verification
+============
+
+- bash syntax: passed
+- shell contract suite: 14 passed, 0 failures, 0 errors, 0 skips
+- background image suite: 4 passed, 0 failures, 0 errors, 0 skips
+- preparation-only run: passed; no signing or Apple service call
+- real read-only preview DMG: passed layout, alias, icon, app signature, and
+  native AppKit checks
+- packaged TIFF: 1800x702 pixels; native logical size 900x351 points
+- alias target: .background/background.tiff; target exists on the mounted image
+- preview SHA-256:
+  1f714be7a5b07f8b4d33e70ddc79c01c1ba5bb80e346084a5fa6ea564104914c
+
+Evidence
+========
+
+- 2026-09-22-background-recheck-contract-tests.log
+- 2026-09-22-background-density-tests.log
+- 2026-09-22-background-recheck-preparation.log
+- 2026-09-22-background-recheck-image.log
+- 2026-09-22-background-recheck-image.sh
+- 2026-09-22-background-native-size.swift
+- 2026-09-22-background-native-alias.swift
+- 2026-09-22-background-recheck-source.sha256
+
+Artifact status and remaining gates
+===================================
+
+The preview at
+/private/tmp/skypc-background-recheck/image/background-preview.dmg is unsigned
+as an outer DMG and is not notarized or distributable. Its contained app was
+reused from the signed 0.9.27 build 4 run and its signature verifies.
+
+The existing 0.9.27 build 4 DMG remains unchanged with SHA-256
+43751fcc8fd19589009df444ce53ebdc52f1b9129727439cd5d4c9f184d3741a.
+It passed Developer ID signing, Apple Accepted, staple and Gatekeeper under
+submission cfab417d-0ec9-4648-8d33-ebe7483d8206, but it predates this TIFF fix.
+Applying the fix requires a fresh signed/notarized artifact, recommended as
+0.9.27 build 5. Visual Finder appearance and installed Dock/Spotlight remain
+manual, unverified gates.
+
+An attempted start of that production build was rejected by automatic approval
+review before the release script executed. The reviewer treated the earlier
+notarization approval as specific to the backup artifact and requires explicit
+approval for the new 0.9.27 build 5 submission. No build-5 run directory was
+created and no binary was signed or uploaded by that attempt.
+
+The pre-existing /Volumes/SkyPC mount on /dev/disk24 was not detached or
+modified. All mounts created by this recheck were detached.
+
+Superseded conclusion
+=====================
+
+The later 0.9.27 build 5 visual check proved that logical TIFF size plus a
+parseable alias did not prove Finder accepted the background. Finder did not
+write a pBBk/pBB0 bookmark for the directly generated metadata and displayed a
+plain dark background. Keep this report as density-fix evidence; use
+2026-09-22-background-finder-fix.txt for the current Finder acceptance gate.

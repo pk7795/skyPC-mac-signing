@@ -1,0 +1,9 @@
+test_missing_image_does_not_pass (test_dmg_layout.BackgroundImageTests.test_missing_image_does_not_pass) ... ok
+test_original_jpeg_is_rejected_for_half_size_canvas (test_dmg_layout.BackgroundImageTests.test_original_jpeg_is_rejected_for_half_size_canvas) ... ok
+test_original_jpeg_matches_full_size_canvas (test_dmg_layout.BackgroundImageTests.test_original_jpeg_matches_full_size_canvas) ... ok
+test_tiff_preserves_retina_density_and_rejects_wrong_canvas (test_dmg_layout.BackgroundImageTests.test_tiff_preserves_retina_density_and_rejects_wrong_canvas) ... ok
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.896s
+
+OK

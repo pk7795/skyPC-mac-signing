@@ -1,0 +1,14 @@
+hdiutil: WARNING: 'hdiutil create -volname -format ...' is deprecated. Please use 'diskutil image create from/blank --volumeName --format ...' instead.
+hdiutil: WARNING: 'hdiutil attach -nobrowse ...' is deprecated. Please use 'diskutil image attach --mountOptions nobrowse ...' instead.
+judge_device=/dev/disk25s1
+judge_mount=/Volumes/SkyPC 1
+
+PASS: Finder-confirmed background bookmark, layout 900x351, matching image logical size and icon positions
+PASS: Finder resolved the background alias and wrote bookmark records
+hdiutil: WARNING: 'hdiutil detach ...' is deprecated. Please use 'diskutil eject ...' instead.
+hdiutil: WARNING: 'hdiutil convert -format ...' is deprecated. Please use 'diskutil image create from --format ...' instead.
+hdiutil: WARNING: 'hdiutil attach -readonly -nobrowse ...' is deprecated. Please use 'diskutil image attach --readOnly --mountOptions nobrowse ...' instead.
+PASS: Finder-confirmed background bookmark, layout 900x351, matching image logical size and icon positions
+519f683fd2b790b530538ed081ca59e68297e593ee26828726ef401c442b69a8  /private/tmp/skypc-finder-judge.LcbABb/background-preview.dmg
+preview=/private/tmp/skypc-finder-judge.LcbABb/background-preview.dmg
+judge_work=/private/tmp/skypc-finder-judge.LcbABb

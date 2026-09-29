@@ -1,0 +1,7 @@
+
+PASS: Finder-confirmed background bookmark, layout 900x351, matching image logical size and icon positions
+PASS: Finder-confirmed background bookmark, layout 900x351, matching image logical size and icon positions
+79ad7c47f90fe25579611b54c492c9247ab0ce741dc71ee2820b7a729c206a04  /private/tmp/skypc-post-finder-icon.MEOAx9/SkyPC-preview.dmg
+PASS: Finder background and post-Finder volume icon survive UDZO conversion
+preview=/private/tmp/skypc-post-finder-icon.MEOAx9/SkyPC-preview.dmg
+work=/private/tmp/skypc-post-finder-icon.MEOAx9

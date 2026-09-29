@@ -1,0 +1,56 @@
+SkyPC 0.9.27 input preflight — 2026-09-22
+Scope: inspect before running the release script. No app launch, preparation,
+signing, image creation, credential submission or notarization performed.
+
+Input: Mac-signing/skypc-0.9.27
+Size: 33,811,920 bytes; permissions 755; Mach-O 64-bit executable arm64.
+SHA-256: 5371b86187492b883431f61c4a7f47c8dde8b37e3784e2cc184af6144df35de9
+MATCH: skypc-app/target/release/skypc has exactly the same SHA-256.
+Backup SHA-256: b3f72e6b822c24e9e15cb873b070bbabf06da503ba53624acde56fd90ff87a03
+The input is different from the backup.
+
+Commands/checks performed from workspace root:
+  file Mac-signing/skypc-0.9.27
+  shasum -a 256 Mac-signing/skypc-0.9.27 Mac-signing/skypc.unsigned-backup
+  Python hashlib: skypc-app/target/release/skypc SHA-256 comparison
+  otool -L Mac-signing/skypc-0.9.27
+    PASS: all linked dependencies are /System/Library/* or /usr/lib/*.
+  xcrun vtool -show-build Mac-signing/skypc-0.9.27
+    platform MACOS; minos 11.0; SDK 27.0; LD 27037.1.
+  xcrun vtool -show-build Mac-signing/skypc.unsigned-backup
+    minos 11.0; SDK 15.4 (previous toolchain).
+  codesign -dvvv Mac-signing/skypc-0.9.27
+    adhoc, linker-signed; TeamIdentifier not set; no production signature yet.
+  codesign --verify --strict --verbose=4 Mac-signing/skypc-0.9.27
+    PASS: valid on disk, satisfies its Designated Requirement.
+  xattr Mac-signing/skypc-0.9.27
+    com.apple.provenance only; no quarantine (attribute values not collected).
+  plutil -lint Mac-signing/template/Info.plist
+    PASS; LSMinimumSystemVersion=11.0, matching binary minimum deployment target.
+  plutil -extract CFBundleShortVersionString raw -o - Mac-signing/template/Info.plist
+    0.1.1
+  plutil -extract CFBundleVersion raw -o - Mac-signing/template/Info.plist
+    2
+  bash -n Mac-signing/release_skypc.sh
+    PASS.
+  Mac-signing/.venv/bin/python importlib.metadata.version checks
+    ds-store 1.3.1; mac-alias 2.2.3, matching pinned requirements.
+  stat -f '%Lp %N' Mac-signing/.env
+    600; no credential values read or printed.
+  SHA-256 comparison with 2026-09-22-background-source.sha256
+    PASS: release script, layout helper, icon and background unchanged.
+
+Workspace observation: skypc-app main at
+13d346f449c628f960a52100436cf893167033b4; Cargo.toml version 0.9.27;
+pre-existing untracked docs/. Matching the local build output proves copy
+integrity, not the exact source commit/toolchain reproducibility of that build.
+
+Result: no input-format/dependency/signature-integrity blocker found.
+Use explicit package metadata because the script does not infer version from
+the filename or Cargo.toml. Suggested next command (NOT executed):
+  cd Mac-signing
+  ./release_skypc.sh ./skypc-0.9.27 --version 0.9.27 --build 4
+
+Unverified: runtime/older-macOS compatibility (SDK 27 with minos 11.0 is only
+declared compatibility), production identity/credentials for a new run,
+Apple acceptance, installed Finder/Dock/Spotlight and full product behavior.

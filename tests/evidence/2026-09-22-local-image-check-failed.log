@@ -1,0 +1,6 @@
+hdiutil: WARNING: 'hdiutil attach -nobrowse -mountpoint ...' is deprecated. Please use 'diskutil image attach --mountOptions nobrowse --mountPoint ...' instead.
+/dev/disk24         	GUID_partition_scheme          	
+/dev/disk24s1       	Apple_HFS                      	/private/tmp/skypc-signing-image-check-20260922/mount
+usage: GetFileInfo [-P] [-a[<attrib-letter>] | -t | -c | -d | -m] <path>
+hdiutil: WARNING: 'hdiutil detach ...' is deprecated. Please use 'diskutil eject ...' instead.
+"disk24" ejected.

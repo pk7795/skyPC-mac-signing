@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+
+<plist version="1.0">
+<dict>
+
+    <key>CFBundleName</key>
+    <string>SkyPC</string>
+
+    <key>CFBundleDisplayName</key>
+    <string>SkyPC</string>
+
+    <key>CFBundleIdentifier</key>
+    <string>com.sub2s.skypc</string>
+
+    <key>CFBundleExecutable</key>
+    <string>skypc</string>
+
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleTypeRole</key>
+            <string>Viewer</string>
+            <key>CFBundleURLName</key>
+            <string>com.sub2s.skypc.oidc</string>
+            <key>CFBundleURLSchemes</key>
+            <array>
+                <string>skypc</string>
+            </array>
+        </dict>
+    </array>
+
+    <key>CFBundleShortVersionString</key>
+    <string>0.1.1</string>
+
+    <key>CFBundleVersion</key>
+    <string>2</string>
+
+    <key>LSMinimumSystemVersion</key>
+    <string>11.0</string>
+
+    <key>NSHighResolutionCapable</key>
+    <true/>
+
+    <key>CFBundleIconFile</key>
+    <string>SkyPC.icns</string>
+
+    <key>NSCameraUsageDescription</key>
+    <string>SkyPC requires camera access for remote camera functionality.</string>
+
+    <key>NSMicrophoneUsageDescription</key>
+    <string>SkyPC requires microphone access for remote audio functionality.</string>
+
+    <key>NSLocalNetworkUsageDescription</key>
+    <string>SkyPC uses the local network to connect to computers you choose for remote desktop and game streaming.</string>
+
+</dict>
+</plist>

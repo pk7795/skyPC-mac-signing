@@ -1,0 +1,63 @@
+SkyPC 0.9.27 build 7 release handoff
+Date: 2026-09-23 Asia/Ho_Chi_Minh
+
+Artifact
+- Run: releases/SkyPC-0.9.27-7-20260922T165900Z.j9MO8b
+- DMG: releases/SkyPC-0.9.27-7-20260922T165900Z.j9MO8b/dist/SkyPC.dmg
+- Size: 16,491,477 bytes
+- SHA-256: bc11ae480c7652963d5b391bf34a1038dce1cdb4505f214d75773f66f7dc406f
+- Input SHA-256: 5371b86187492b883431f61c4a7f47c8dde8b37e3784e2cc184af6144df35de9
+- Script SHA-256: 2b78c4e0b2aa45e5b5c5fcddaa5f064f1b65f13bc45d904a4d923ab5ea335ba3
+
+Production gates
+- Developer ID signing with Hardened Runtime: PASS.
+- Apple notarization: Accepted, submission 9f2882fc-9ef1-41a5-afa3-cdeee381a396.
+- Stapler validation: PASS.
+- DMG Gatekeeper: accepted, Notarized Developer ID.
+- Contained app Gatekeeper: accepted, Notarized Developer ID.
+- Final checksum verification: PASS.
+- Both writable and final read-only image checks confirm the Finder bookmark,
+  relative background alias/CNID, 900x351 logical canvas, window dimensions and
+  SkyPC/Applications positions.
+- Final read-only volume checks confirm exact app/volume ICNS bytes, hidden
+  `.VolumeIcon.icns`, custom-volume-icon flag, Applications link, plist,
+  background and executable.
+
+Visual Finder evidence
+- `tests/evidence/2026-09-23-build7-finder.png` is a direct 2x screenshot of the
+  exact signed/notarized/stapled DMG after read-only mount.
+- It visibly shows the cloud background, SkyPC icon on the left and Applications
+  shortcut on the right. The prior plain dark background is not present.
+- Screenshot dimensions: 1800x702 pixels for the 900x351 point Finder window.
+- Screenshot SHA-256:
+  381a92927d3a122331549a2e6f5d7d3e221ad973643cc62c86288bd2c976d38e.
+- Exact driver and log:
+  - tests/evidence/2026-09-23-build7-finder-visual.sh
+  - tests/evidence/2026-09-23-build7-finder-visual.log
+- The inspection mount was detached.
+
+App icon and Spotlight metadata
+- Info.plist: `CFBundleDisplayName=SkyPC`, `CFBundleName=SkyPC`,
+  `CFBundleIdentifier=com.sub2s.skypc`, `CFBundleIconFile=SkyPC.icns`, package
+  type `APPL`, version `0.9.27`, build `7`.
+- `mdls` recognizes `kMDItemDisplayName=SkyPC`,
+  `kMDItemCFBundleIdentifier=com.sub2s.skypc` and `kMDItemVersion=0.9.27` on the
+  signed build-7 app bundle.
+- `mdfind 'kMDItemCFBundleIdentifier == "com.sub2s.skypc"'` returns both the
+  build-7 signed bundle and its staged bundle, confirming current Spotlight
+  indexing of the packaged metadata.
+- Actual search after drag-install remains dependent on the destination Mac's
+  Spotlight indexing. No existing `/Applications/SkyPC.app` was present and this
+  release task did not install one.
+
+Verification carried forward from the ordering fix
+- `python3 tests/test_release_skypc.py`: 14 passed, 0 failed/errors/skipped.
+- `.venv/bin/python -m unittest -v tests/test_dmg_layout.py`: 4 passed, 0
+  failed/errors/skipped.
+- Real unsigned post-Finder volume-icon/background conversion smoke: PASS.
+
+Open gate
+- Build 7 used `--skip-smoke-test`, so its evidence records runtime unverified.
+  Build 6 had operator-confirmed runtime PASS on the identical input binary hash,
+  but installed runtime and post-install Spotlight search remain separate manual
+  consumer checks.
