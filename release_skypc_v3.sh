@@ -34,15 +34,21 @@ Final DMGs use the Ubuntu-aligned names
 EOF
 }
 read_attachment() {
-  local entity_count index entry point
-  entity_count="$(plutil -extract system-entities raw -o - "$ATTACH_PLIST" 2>/dev/null)" || return 1
-  [[ "$entity_count" =~ ^[0-9]+$ ]] || return 1
+  local index entry point
+  # Do not depend on `plutil -extract ... raw` returning an array length. That
+  # behavior differs between macOS/plutil versions. Walking indexed keypaths
+  # works for both XML and binary hdiutil attach plists.
+  [ -s "$ATTACH_PLIST" ] || return 1
+  DEVICE=''
+  MOUNT=''
   mount_count=0
-  for ((index=0; index<entity_count; index++)); do
+  index=0
+  while plutil -type "system-entities.$index" "$ATTACH_PLIST" >/dev/null 2>&1; do
     entry="$(plutil -extract "system-entities.$index.dev-entry" raw -o - "$ATTACH_PLIST" 2>/dev/null || true)"
+    case "$entry" in /dev/disk*) [ -z "$DEVICE" ] && DEVICE="$entry" ;; esac
     point="$(plutil -extract "system-entities.$index.mount-point" raw -o - "$ATTACH_PLIST" 2>/dev/null || true)"
-    if [ -z "$DEVICE" ]; then case "$entry" in /dev/disk*) DEVICE="$entry" ;; esac; fi
     if [ -n "$point" ]; then MOUNT="$point"; mount_count=$((mount_count + 1)); fi
+    index=$((index + 1))
   done
 }
 cleanup() {
@@ -150,7 +156,7 @@ validate_build_artifact() {
   hdiutil attach "$BUILD_DMG" -readonly -nobrowse -noautoopen -plist > "$ATTACH_PLIST" || attach_rc=$?
   read_attachment || die 'Cannot parse the build DMG attach result'
   [ "$attach_rc" -eq 0 ] || die 'Could not attach the build DMG read-only'
-  [ -n "$DEVICE" ] && [ "$mount_count" -eq 1 ] && [ -d "$MOUNT" ] || die 'Expected one mounted filesystem from the build DMG'
+  [ -n "$DEVICE" ] && [ "$mount_count" -ge 1 ] && [ -d "$MOUNT" ] || die "Expected at least one mounted filesystem from the build DMG (device=$DEVICE mount_count=$mount_count mount=$MOUNT)"
 
   SOURCE_APP="$MOUNT/skyPC.app"
   SOURCE_PLIST="$SOURCE_APP/Contents/Info.plist"

@@ -266,17 +266,23 @@ else
 fi
 # Read only this run's attach result; never guess /Volumes/SkyPC or detach it.
 read_attachment() {
-  local count index entry point
-  count="$(plist_get system-entities "$ATTACH_PLIST" 2>/dev/null)" || return 1
-  [[ "$count" =~ ^[0-9]+$ ]] || return 1
+  local index entry point
+  # `plutil -extract system-entities raw` happens to return an array length on
+  # current macOS releases, but that is an implementation detail of plutil's
+  # Swift mode and is not stable across macOS versions.  Walk the array by
+  # keypath instead; an out-of-range index is the portable end-of-array
+  # signal.  This also keeps the parser independent of XML/binary plist form.
+  [ -s "$ATTACH_PLIST" ] || return 1
+  DEVICE=''
+  MOUNT=''
   MOUNT_COUNT=0
-  for ((index=0; index<count; index++)); do
+  index=0
+  while plutil -type "system-entities.$index" "$ATTACH_PLIST" >/dev/null 2>&1; do
     entry="$(plist_get "system-entities.$index.dev-entry" "$ATTACH_PLIST" 2>/dev/null || true)"
-    if [ -z "$DEVICE" ]; then
-      case "$entry" in /dev/disk*) DEVICE="$entry" ;; esac
-    fi
+    case "$entry" in /dev/disk*) [ -z "$DEVICE" ] && DEVICE="$entry" ;; esac
     point="$(plist_get "system-entities.$index.mount-point" "$ATTACH_PLIST" 2>/dev/null || true)"
     if [ -n "$point" ]; then MOUNT="$point"; MOUNT_COUNT=$((MOUNT_COUNT + 1)); fi
+    index=$((index + 1))
   done
 }
 cleanup() {
