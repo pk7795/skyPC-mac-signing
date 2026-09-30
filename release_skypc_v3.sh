@@ -44,9 +44,9 @@ read_attachment() {
   mount_count=0
   index=0
   while plutil -type "system-entities.$index" "$ATTACH_PLIST" >/dev/null 2>&1; do
-    entry="$(plutil -extract "system-entities.$index.dev-entry" raw -o - "$ATTACH_PLIST" 2>/dev/null || true)"
+    entry="$(plutil -extract "system-entities.$index.dev-entry" raw -o - "$ATTACH_PLIST" 2>/dev/null)" || entry=''
     case "$entry" in /dev/disk*) [ -z "$DEVICE" ] && DEVICE="$entry" ;; esac
-    point="$(plutil -extract "system-entities.$index.mount-point" raw -o - "$ATTACH_PLIST" 2>/dev/null || true)"
+    point="$(plutil -extract "system-entities.$index.mount-point" raw -o - "$ATTACH_PLIST" 2>/dev/null)" || point=''
     if [ -n "$point" ]; then MOUNT="$point"; mount_count=$((mount_count + 1)); fi
     index=$((index + 1))
   done
